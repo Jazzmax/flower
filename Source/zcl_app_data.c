@@ -59,8 +59,8 @@ const uint8 zclApp_ApplicationVersion = 3;
 const uint8 zclApp_StackVersion = 4;
 
 //{lenght, 'd', 'a', 't', 'a'}
-const uint8 zclApp_ManufacturerName[] = {9, 'm', 'o', 'd', 'k', 'a', 'm', '.', 'r', 'u'};
-const uint8 zclApp_ModelId[] = {13, 'D', 'I', 'Y', 'R', 'u', 'Z', '_', 'F', 'l', 'o', 'w', 'e', 'r'};
+const uint8 zclApp_ManufacturerName[] = {12, 'W', 'a', 'r', 'r', 'i', 'o', 'r', '-', 'C', 'a', 't', 's'};
+const uint8 zclApp_ModelId[] = {8, 'W', 'C', 'F', 'l', 'o', 'w', 'e', 'r'};
 const uint8 zclApp_PowerSource = POWER_SOURCE_BATTERY;
 
 /*********************************************************************
@@ -98,6 +98,8 @@ CONST zclAttrRec_t zclApp_AttrsFirstEP[] = {
 
 
     {ILLUMINANCE, {ATTRID_MS_ILLUMINANCE_MEASURED_VALUE, ZCL_UINT16, RR, (void *)&zclApp_IlluminanceSensor_MeasuredValue}},
+
+#if !defined(USE_OLY_HUMIDITY_AND_ILLUMINANCE)
     {TEMP, {ATTRID_MS_TEMPERATURE_MEASURED_VALUE, ZCL_INT16, RR, (void *)&zclApp_Temperature_Sensor_MeasuredValue}},
 
     {PRESSURE, {ATTRID_MS_PRESSURE_MEASUREMENT_MEASURED_VALUE, ZCL_INT16, RR, (void *)&zclApp_PressureSensor_MeasuredValue}},
@@ -105,7 +107,7 @@ CONST zclAttrRec_t zclApp_AttrsFirstEP[] = {
     {PRESSURE, {ATTRID_MS_PRESSURE_MEASUREMENT_SCALE, ZCL_INT8, R, (void *)&zclApp_PressureSensor_Scale}},
 
     {HUMIDITY, {ATTRID_MS_RELATIVE_HUMIDITY_MEASURED_VALUE, ZCL_UINT16, RR, (void *)&zclApp_HumiditySensor_MeasuredValue}},
-
+#endif
 /**
  * FYI: ATTRID_POWER_CFG_BATTERY_VOLTAGE_RAW_ADC and ATTRID_MS_RELATIVE_HUMIDITY_MEASURED_VALUE_RAW_ADC
  * can be used to calculate relative humidity in converter
@@ -115,19 +117,15 @@ CONST zclAttrRec_t zclApp_AttrsFirstEP[] = {
     {SOIL_HUMIDITY, {ATTRID_MS_RELATIVE_HUMIDITY_MEASURED_VALUE_BATTERY_RAW_ADC, ZCL_UINT16, RR, (void *)&zclBattery_RawAdc}}
 };
 
+#if defined(USE_OLY_HUMIDITY_AND_ILLUMINANCE)
+const cId_t zclApp_InClusterListFirstEP[] = {ZCL_CLUSTER_ID_GEN_BASIC, POWER_CFG, ILLUMINANCE, SOIL_HUMIDITY};
+#else
+const cId_t zclApp_InClusterListFirstEP[] = {ZCL_CLUSTER_ID_GEN_BASIC, POWER_CFG, ILLUMINANCE, TEMP, PRESSURE, HUMIDITY, SOIL_HUMIDITY};
+#endif
 
-CONST zclAttrRec_t zclApp_AttrsSecondEP[] = {
-    {TEMP, {ATTRID_MS_TEMPERATURE_MEASURED_VALUE, ZCL_INT16, RR, (void *)&zclApp_DS18B20_MeasuredValue}},
-};
-uint8 CONST zclApp_AttrsSecondEPCount = (sizeof(zclApp_AttrsSecondEP) / sizeof(zclApp_AttrsSecondEP[0]));
 uint8 CONST zclApp_AttrsFirstEPCount = (sizeof(zclApp_AttrsFirstEP) / sizeof(zclApp_AttrsFirstEP[0]));
 
-
-const cId_t zclApp_InClusterListFirstEP[] = {ZCL_CLUSTER_ID_GEN_BASIC, POWER_CFG, ILLUMINANCE, TEMP, PRESSURE, HUMIDITY, SOIL_HUMIDITY};
-const cId_t zclApp_InClusterListSecondEP[] = {TEMP};
-
 #define APP_MAX_INCLUSTERS_FIRST_EP (sizeof(zclApp_InClusterListFirstEP) / sizeof(zclApp_InClusterListFirstEP[0]))
-#define APP_MAX_INCLUSTERS_SECOND_EP (sizeof(zclApp_InClusterListSecondEP) / sizeof(zclApp_InClusterListSecondEP[0]))
 
 SimpleDescriptionFormat_t zclApp_FirstEP = {
     1,                                                  //  int Endpoint;
@@ -141,6 +139,16 @@ SimpleDescriptionFormat_t zclApp_FirstEP = {
     (cId_t *)NULL                                       //  byte *pAppOutClusterList;  
 };
 
+#if !defined(USE_OLY_HUMIDITY_AND_ILLUMINANCE)
+CONST zclAttrRec_t zclApp_AttrsSecondEP[] = {
+    {TEMP, {ATTRID_MS_TEMPERATURE_MEASURED_VALUE, ZCL_INT16, RR, (void *)&zclApp_DS18B20_MeasuredValue}},
+};
+uint8 CONST zclApp_AttrsSecondEPCount = (sizeof(zclApp_AttrsSecondEP) / sizeof(zclApp_AttrsSecondEP[0]));
+
+
+const cId_t zclApp_InClusterListSecondEP[] = {TEMP};
+
+#define APP_MAX_INCLUSTERS_SECOND_EP (sizeof(zclApp_InClusterListSecondEP) / sizeof(zclApp_InClusterListSecondEP[0]))
 
 SimpleDescriptionFormat_t zclApp_SecondEP = {
     2,                                                  //  int Endpoint;
@@ -153,3 +161,4 @@ SimpleDescriptionFormat_t zclApp_SecondEP = {
     0,                                                  //  byte  AppNumOutClusters;
     (cId_t *)NULL                                       //  byte *pAppOutClusterList;
 };
+#endif

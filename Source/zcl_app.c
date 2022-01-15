@@ -143,9 +143,11 @@ void zclApp_Init(byte task_id) {
     zcl_registerAttrList(zclApp_FirstEP.EndPoint, zclApp_AttrsFirstEPCount, zclApp_AttrsFirstEP);
     bdb_RegisterSimpleDescriptor(&zclApp_FirstEP);
 
+#if !defined(USE_OLY_HUMIDITY_AND_ILLUMINANCE)
     zcl_registerAttrList(zclApp_SecondEP.EndPoint, zclApp_AttrsSecondEPCount, zclApp_AttrsSecondEP);
     bdb_RegisterSimpleDescriptor(&zclApp_SecondEP);
-
+#endif
+    
     zcl_registerForMsg(zclApp_TaskID);
 
     // Register for all key events - This app will handle all key events
@@ -243,6 +245,8 @@ static void zclApp_ReadSensors(void) {
         zclBattery_Report();
         zclApp_ReadSoilHumidity();
         break;
+
+#if !defined(USE_OLY_HUMIDITY_AND_ILLUMINANCE)
     case 2:
         zclApp_InitBME280(&bme_dev);
         break;
@@ -250,6 +254,8 @@ static void zclApp_ReadSensors(void) {
     case 3:
         zclApp_ReadDS18B20();
         break;
+#endif
+        
     default:
         POWER_OFF_SENSORS();
         currentSensorsReadingPhase = 0;
@@ -269,10 +275,10 @@ static void zclApp_ReadSoilHumidity(void) {
     zclApp_SoilHumiditySensor_MeasuredValue =
         (uint16)mapRange(soilHumidityMinRangeAir, soilHumidityMaxRangeWater, 0.0, 10000.0, zclApp_SoilHumiditySensor_MeasuredValueRawAdc);
     LREP("ReadSoilHumidity raw=%d mapped=%d\r\n", zclApp_SoilHumiditySensor_MeasuredValueRawAdc, zclApp_SoilHumiditySensor_MeasuredValue);
-
     bdb_RepChangedAttrValue(zclApp_FirstEP.EndPoint, SOIL_HUMIDITY, ATTRID_MS_RELATIVE_HUMIDITY_MEASURED_VALUE);
 }
 
+#if !defined(USE_OLY_HUMIDITY_AND_ILLUMINANCE)
 static void zclApp_ReadDS18B20(void) {
     int16 temp = readTemperature();
     if (temp != 1) {
@@ -283,6 +289,7 @@ static void zclApp_ReadDS18B20(void) {
         LREPMaster("ReadDS18B20 error\r\n");
     }
 }
+#endif
 
 static void zclApp_ReadLumosity(void) {
     zclApp_IlluminanceSensor_MeasuredValueRawAdc = adcReadSampled(LUMOISITY_PIN, HAL_ADC_RESOLUTION_14, HAL_ADC_REF_AVDD, 5);
@@ -306,6 +313,7 @@ static void _delay_us(uint16 microSecs) {
 
 void user_delay_ms(uint32_t period) { _delay_us(1000 * period); }
 
+#if !defined(USE_OLY_HUMIDITY_AND_ILLUMINANCE)
 static void zclApp_InitBME280(struct bme280_dev *dev) {
     int8_t rslt = bme280_init(dev);
     if (rslt == BME280_OK) {
@@ -347,6 +355,8 @@ static void zclApp_ReadBME280(struct bme280_dev *dev) {
         LREP("ReadBME280 read error %d\r\n", rslt);
     }
 }
+#endif
+
 static void zclApp_Report(void) { osal_start_timerEx(zclApp_TaskID, APP_READ_SENSORS_EVT, 10); }
 
 /****************************************************************************
